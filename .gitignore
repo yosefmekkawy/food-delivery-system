@@ -8,3 +8,9 @@ target/
 *.iml
 *.iws
 *.ipr
+
+# Project Documentation & Local Configs (ignored as requested)
+data.md
+notes.md
+application.properties.dev
+food-delivery-app/src/main/java/com/mentorship/food_delivery_app/common/config/SecurityConfig.java
