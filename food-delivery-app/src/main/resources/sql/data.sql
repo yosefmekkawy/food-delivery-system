@@ -1,4 +1,5 @@
 -- SQL Script to populate the Food Delivery System with dummy data
+-- Keeps one active customer cart with two items so cart update/remove/checkout can be exercised immediately.
 
 -- 1. Insert a User
 INSERT INTO users (user_first_name, user_last_name, user_email, user_password, user_phone, user_gender)
@@ -21,21 +22,33 @@ ON CONFLICT DO NOTHING;
 
 -- 4. Insert a Cart for the Customer (Mohamed)
 INSERT INTO carts (cart_customer_id, notes)
-SELECT customer_id, 'Deliver to the main gate' FROM customers 
-JOIN users ON customers.user_id = users.user_id 
+SELECT customer_id, 'Deliver to the main gate'
+FROM customers
+JOIN users ON customers.user_id = users.user_id
 WHERE users.user_email = 'mohamed@example.com'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (
+	  SELECT 1
+	  FROM carts existing_cart
+	  WHERE existing_cart.cart_customer_id = customers.customer_id
+  );
 
 -- 5. Add Items to the Cart
--- Assuming Cart ID 1 and Menu Item IDs 1 and 2
 INSERT INTO cart_items (cart_id, menu_item_id, quantity, note)
 SELECT c.cart_id, mi.menu_item_id, 2, 'Extra cheese please'
-FROM carts c, menu_items mi
-WHERE c.cart_id = 1 AND mi.menu_item_name = 'Margherita Pizza'
+FROM carts c
+CROSS JOIN menu_items mi
+JOIN customers customer ON customer.customer_id = c.cart_customer_id
+JOIN users u ON u.user_id = customer.user_id
+WHERE u.user_email = 'mohamed@example.com'
+  AND mi.menu_item_name = 'Margherita Pizza'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO cart_items (cart_id, menu_item_id, quantity)
 SELECT c.cart_id, mi.menu_item_id, 1
-FROM carts c, menu_items mi
-WHERE c.cart_id = 1 AND mi.menu_item_name = 'Cheese Burger'
+FROM carts c
+CROSS JOIN menu_items mi
+JOIN customers customer ON customer.customer_id = c.cart_customer_id
+JOIN users u ON u.user_id = customer.user_id
+WHERE u.user_email = 'mohamed@example.com'
+  AND mi.menu_item_name = 'Cheese Burger'
 ON CONFLICT DO NOTHING;

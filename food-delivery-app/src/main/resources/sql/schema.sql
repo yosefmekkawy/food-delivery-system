@@ -42,7 +42,31 @@ CREATE TABLE IF NOT EXISTS carts (
 CREATE TABLE IF NOT EXISTS cart_items (
     cart_id INTEGER NOT NULL REFERENCES carts(cart_id) ON DELETE CASCADE,
     menu_item_id INTEGER NOT NULL REFERENCES menu_items(menu_item_id),
-    quantity INTEGER NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
     note TEXT,
     PRIMARY KEY (cart_id, menu_item_id)
 );
+
+-- 6. Orders Table
+CREATE TABLE IF NOT EXISTS orders (
+    order_id SERIAL PRIMARY KEY,
+    order_customer_id INTEGER NOT NULL REFERENCES customers(customer_id),
+    order_subtotal DECIMAL(10, 2) NOT NULL,
+    order_fee DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    order_total DECIMAL(10, 2) NOT NULL,
+    order_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    order_note TEXT,
+    order_status VARCHAR(50) NOT NULL DEFAULT 'PLACED'
+);
+
+-- 7. Order Items Table (Composite PK: order_id + menu_item_id)
+CREATE TABLE IF NOT EXISTS order_items (
+    order_id INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+    menu_item_id INTEGER NOT NULL REFERENCES menu_items(menu_item_id),
+    unit_price DECIMAL(10, 2) NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    subtotal DECIMAL(10, 2) NOT NULL,
+    note TEXT,
+    PRIMARY KEY (order_id, menu_item_id)
+);
+
