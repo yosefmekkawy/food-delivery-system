@@ -1,19 +1,18 @@
-package com.mentorship.food_delivery_app.cart.dto;
+package com.mentorship.food_delivery_app.order.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 
-/**
- * DTO for displaying a single item in the cart.
- */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItemResponseDTO {
+public class OrderItemResponseDTO {
+
     private Long menuItemId;
     private String itemName;
     private Integer quantity;
@@ -21,3 +20,4 @@ public class CartItemResponseDTO {
     private BigDecimal subtotal;
     private String note;
 }
+
