@@ -27,7 +27,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     @Transactional
-    public OrderResponseDTO createOrderFromCart(Cart cart, String checkoutNote) {
+    public Order createOrderFromCart(Cart cart, String checkoutNote) {
         List<OrderItem> orderItems = cart.getItems().stream()
                 .sorted(Comparator.comparing(item -> item.getMenuItem().getId()))
                 .map(this::mapToOrderItem)
@@ -47,8 +47,7 @@ public class OrderService {
         order.setNote(StringUtils.hasText(checkoutNote) ? checkoutNote : cart.getNotes());
         orderItems.forEach(order::addItem);
 
-        Order savedOrder = orderRepository.save(order);
-        return mapToResponse(savedOrder);
+        return orderRepository.save(order);
     }
 
     private OrderItem mapToOrderItem(CartItem cartItem) {
@@ -65,7 +64,7 @@ public class OrderService {
         );
     }
 
-    private OrderResponseDTO mapToResponse(Order order) {
+    public OrderResponseDTO toResponse(Order order) {
         List<OrderItemResponseDTO> items = order.getItems().stream()
                 .sorted(Comparator.comparing(item -> item.getMenuItem().getId()))
                 .map(item -> new OrderItemResponseDTO(

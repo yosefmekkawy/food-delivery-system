@@ -4,6 +4,7 @@ import com.mentorship.food_delivery_app.cart.dto.AddToCartRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.CartItemResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
+import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.UpdateCartItemRequestDTO;
 import com.mentorship.food_delivery_app.cart.exceptions.CartItemNotFoundException;
 import com.mentorship.food_delivery_app.cart.exceptions.CartLockedException;
@@ -15,8 +16,6 @@ import com.mentorship.food_delivery_app.cart.entity.CartItem;
 import com.mentorship.food_delivery_app.cart.repository.CartItemRepository;
 import com.mentorship.food_delivery_app.cart.repository.CartRepository;
 import com.mentorship.food_delivery_app.cart.repository.MenuItemRepository;
-import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
-import com.mentorship.food_delivery_app.order.service.OrderService;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,7 +38,7 @@ public class CartService {
     private final CartRepository cartRepository;
     private final MenuItemRepository menuItemRepository;
     private final CartItemRepository cartItemRepository;
-    private final OrderService orderService;
+    private final CheckoutService checkoutService;
 
     /**
      * Retrieves the cart for a user and calculates all totals.
@@ -98,19 +97,11 @@ public class CartService {
      * Converts the customer's cart into an order snapshot and clears the active cart.
      */
     @Transactional
-    public OrderResponseDTO checkoutCart(Long customerId, CheckoutCartRequestDTO request) {
+    public CheckoutCartResponseDTO checkoutCart(Long customerId, CheckoutCartRequestDTO request) {
         Cart cart = findCartByCustomerId(customerId);
         validateCartIsMutable(cart, "checked out");
         ensureCartHasItems(customerId, cart);
-
-        String checkoutNote = request != null ? request.getNote() : null;
-        OrderResponseDTO orderResponse = orderService.createOrderFromCart(cart, checkoutNote);
-
-        cart.clearItems();
-        cart.setNotes(null);
-        cart.setRestaurantId(null);
-
-        return orderResponse;
+        return checkoutService.checkout(cart, request);
     }
 
     /**

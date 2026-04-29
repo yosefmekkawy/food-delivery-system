@@ -21,8 +21,8 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 4. Insert a Cart for the Customer (Mohamed)
-INSERT INTO carts (cart_customer_id, notes)
-SELECT customer_id, 'Deliver to the main gate'
+INSERT INTO carts (cart_customer_id, current_rest_id, notes)
+SELECT customer_id, 1, 'Deliver to the main gate'
 FROM customers
 JOIN users ON customers.user_id = users.user_id
 WHERE users.user_email = 'mohamed@example.com'
@@ -52,3 +52,28 @@ JOIN users u ON u.user_id = customer.user_id
 WHERE u.user_email = 'mohamed@example.com'
   AND mi.menu_item_name = 'Cheese Burger'
 ON CONFLICT DO NOTHING;
+
+INSERT INTO payment_integration_type (payment_integration_type_name)
+VALUES ('CARD'), ('CASH')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO payment_type_config (payment_integration_type, config_details)
+SELECT 'CARD', '{"provider":"simulated","mode":"sync"}'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM payment_type_config
+    WHERE payment_integration_type = 'CARD'
+);
+
+INSERT INTO payment_type_config (payment_integration_type, config_details)
+SELECT 'CASH', '{"provider":"simulated","mode":"sync"}'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM payment_type_config
+    WHERE payment_integration_type = 'CASH'
+);
+
+INSERT INTO transaction_status (status)
+VALUES ('COMPLETED'), ('FAILED'), ('PENDING')
+ON CONFLICT DO NOTHING;
+

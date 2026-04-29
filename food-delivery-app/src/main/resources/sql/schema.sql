@@ -70,3 +70,28 @@ CREATE TABLE IF NOT EXISTS order_items (
     PRIMARY KEY (order_id, menu_item_id)
 );
 
+CREATE TABLE IF NOT EXISTS payment_integration_type (
+    payment_integration_type_name VARCHAR(20) PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS payment_type_config (
+    payment_type_config_id SERIAL PRIMARY KEY,
+    payment_integration_type VARCHAR(20) NOT NULL,
+    config_details TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS transaction_status (
+    status VARCHAR(20) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS "transaction" (
+    transaction_id UUID PRIMARY KEY,
+    transaction_status VARCHAR(20) NOT NULL,
+    transaction_order_id BIGINT NOT NULL,
+    transaction_payment_type VARCHAR(20),
+    transaction_customer_id BIGINT NOT NULL,
+    transaction_rest_branch_id BIGINT NOT NULL,
+    transaction_amount DECIMAL(10, 2) CHECK (transaction_amount > 0),
+    transaction_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mentorship.food_delivery_app.cart.dto.CartItemResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
+import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
 import com.mentorship.food_delivery_app.cart.exceptions.CartItemNotFoundException;
 import com.mentorship.food_delivery_app.cart.service.CartService;
 import com.mentorship.food_delivery_app.common.exceptions.GlobalExceptionHandler;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
+import com.mentorship.food_delivery_app.payment.dto.PaymentTransactionResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,28 +90,49 @@ class CartControllerTest {
 
     @Test
     void checkout_shouldReturnCreatedOrder() throws Exception {
-        OrderResponseDTO response = new OrderResponseDTO(
-                200L,
-                1L,
-                List.of(),
-                new BigDecimal("25.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("25.00"),
-                "Leave at the gate",
-                "PLACED",
-                null
+        CheckoutCartResponseDTO response = new CheckoutCartResponseDTO(
+                new OrderResponseDTO(
+                        200L,
+                        1L,
+                        List.of(),
+                        new BigDecimal("25.00"),
+                        BigDecimal.ZERO,
+                        new BigDecimal("25.00"),
+                        "Leave at the gate",
+                        "PLACED",
+                        null
+                ),
+                new PaymentTransactionResponseDTO(
+                        java.util.UUID.randomUUID(),
+                        "COMPLETED",
+                        "CARD",
+                        new BigDecimal("25.00"),
+                        null
+                )
         );
 
         when(cartService.checkoutCart(eq(1L), any(CheckoutCartRequestDTO.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/cart/{customerId}/checkout", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new CheckoutCartRequestDTO("Leave at the gate"))))
+                        .content(objectMapper.writeValueAsString(new CheckoutCartRequestDTO("Leave at the gate", "CARD"))))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.orderId").value(200L))
-                .andExpect(jsonPath("$.customerId").value(1L))
-                .andExpect(jsonPath("$.status").value("PLACED"))
-                .andExpect(jsonPath("$.totalAmount").value(25.00));
+                .andExpect(jsonPath("$.order.orderId").value(200L))
+                .andExpect(jsonPath("$.order.customerId").value(1L))
+                .andExpect(jsonPath("$.order.status").value("PLACED"))
+                .andExpect(jsonPath("$.order.totalAmount").value(25.00))
+                .andExpect(jsonPath("$.payment.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.payment.paymentIntegrationType").value("CARD"));
+    }
+
+    @Test
+    void checkout_shouldReturnBadRequestWhenPaymentTypeMissing() throws Exception {
+        mockMvc.perform(post("/api/v1/cart/{customerId}/checkout", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"note\":\"Leave at the gate\",\"paymentIntegrationType\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.fieldErrors.paymentIntegrationType").value("Payment integration type is required"));
     }
 }
 
