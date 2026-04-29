@@ -5,6 +5,8 @@ import com.mentorship.food_delivery_app.cart.exceptions.CartLockedException;
 import com.mentorship.food_delivery_app.cart.exceptions.CartNotFoundException;
 import com.mentorship.food_delivery_app.cart.exceptions.EmptyCartException;
 import com.mentorship.food_delivery_app.cart.exceptions.MenuItemNotFoundException;
+import com.mentorship.food_delivery_app.payment.exceptions.PaymentConfigurationNotFoundException;
+import com.mentorship.food_delivery_app.payment.exceptions.RestaurantBranchRequiredException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,12 @@ public class GlobalExceptionHandler {
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI(), null);
 	}
 
-	@ExceptionHandler({CartLockedException.class, EmptyCartException.class})
+	@ExceptionHandler({
+			CartLockedException.class,
+			EmptyCartException.class,
+			PaymentConfigurationNotFoundException.class,
+			RestaurantBranchRequiredException.class
+	})
 	public ResponseEntity<ApiErrorResponse> handleBadRequest(RuntimeException exception, HttpServletRequest request) {
 		return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI(), null);
 	}
