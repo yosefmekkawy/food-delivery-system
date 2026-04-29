@@ -3,10 +3,10 @@ package com.mentorship.food_delivery_app.cart.controller;
 import com.mentorship.food_delivery_app.cart.dto.AddToCartRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.CartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
+import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.UpdateCartItemQuantityRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.UpdateCartItemRequestDTO;
 import com.mentorship.food_delivery_app.cart.service.CartService;
-import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -83,11 +83,11 @@ public class CartController {
      * POST /api/v1/cart/{customerId}/checkout
      */
     @PostMapping("/{customerId}/checkout")
-    public ResponseEntity<OrderResponseDTO> checkoutCart(
+    public ResponseEntity<CheckoutCartResponseDTO> checkoutCart(
             @PathVariable Long customerId,
-            @RequestBody(required = false) CheckoutCartRequestDTO request) {
-        OrderResponseDTO order = cartService.checkoutCart(customerId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(order);
+            @Valid @RequestBody CheckoutCartRequestDTO request) {
+        CheckoutCartResponseDTO checkout = cartService.checkoutCart(customerId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(checkout);
     }
 
     /**

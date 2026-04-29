@@ -62,6 +62,13 @@ Allows restaurant owners to register and manage their restaurant, maintain menus
 ### 3. Cart Management
 
 Manages a customer's shopping cart — adding and modifying items, viewing cart contents, and proceeding to checkout.
+#### Times Estimates:
+| Task                  | Made by | Actual Time |
+|-----------------------|---|-------------|
+| Remove item from cart | Yosef Mekkawy | 30 minutes  |
+| Checkout              | Yosef Mekkawy | 3 hours     |
+| Payment Handling      | Yosef Mekkawy | 2.5 hours   |
+| Update item quantity  | Yosef Mekkawy | 45 minutes  |
 
 | Method | Endpoint | Description |
 |---|---|---|

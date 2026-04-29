@@ -2,6 +2,7 @@ package com.mentorship.food_delivery_app.cart.service;
 
 import com.mentorship.food_delivery_app.cart.dto.CartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
+import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
 import com.mentorship.food_delivery_app.cart.entity.Cart;
 import com.mentorship.food_delivery_app.cart.entity.CartItem;
 import com.mentorship.food_delivery_app.cart.repository.CartItemRepository;
@@ -9,7 +10,7 @@ import com.mentorship.food_delivery_app.cart.repository.CartRepository;
 import com.mentorship.food_delivery_app.cart.repository.MenuItemRepository;
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
-import com.mentorship.food_delivery_app.order.service.OrderService;
+import com.mentorship.food_delivery_app.payment.dto.PaymentTransactionResponseDTO;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +43,7 @@ class CartServiceTest {
     private CartItemRepository cartItemRepository;
 
     @Mock
-    private OrderService orderService;
+    private CheckoutService checkoutService;
 
     @InjectMocks
     private CartService cartService;
@@ -86,36 +87,44 @@ class CartServiceTest {
     }
 
     @Test
-    void checkoutCart_shouldCreateOrderAndClearCart() {
+    void checkoutCart_shouldDelegateToCheckoutService() {
         Long customerId = 1L;
         Cart cart = createCart(102L, customerId, "Original note");
         addItem(cart, 11L, "Burger", new BigDecimal("10.00"), 2, "no pickles");
         addItem(cart, 12L, "Fries", new BigDecimal("5.00"), 1, null);
         cart.setRestaurantId(12L);
 
-        OrderResponseDTO orderResponse = new OrderResponseDTO(
-                500L,
-                customerId,
-                List.of(),
-                new BigDecimal("25.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("25.00"),
-                "Checkout note",
-                "PLACED",
-                LocalDateTime.now()
+        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("Checkout note", "CARD");
+        CheckoutCartResponseDTO checkoutResponse = new CheckoutCartResponseDTO(
+                new OrderResponseDTO(
+                        500L,
+                        customerId,
+                        List.of(),
+                        new BigDecimal("25.00"),
+                        BigDecimal.ZERO,
+                        new BigDecimal("25.00"),
+                        "Checkout note",
+                        "PLACED",
+                        LocalDateTime.now()
+                ),
+                new PaymentTransactionResponseDTO(
+                        java.util.UUID.randomUUID(),
+                        "COMPLETED",
+                        "CARD",
+                        new BigDecimal("25.00"),
+                        LocalDateTime.now()
+                )
         );
 
         when(cartRepository.findByCustomerId(customerId)).thenReturn(Optional.of(cart));
         when(cartItemRepository.existsByCartId(cart.getId())).thenReturn(true);
-        when(orderService.createOrderFromCart(any(Cart.class), any(String.class))).thenReturn(orderResponse);
+        when(checkoutService.checkout(cart, request)).thenReturn(checkoutResponse);
 
-        OrderResponseDTO result = cartService.checkoutCart(customerId, new CheckoutCartRequestDTO("Checkout note"));
+        CheckoutCartResponseDTO result = cartService.checkoutCart(customerId, request);
 
-        assertThat(result.getOrderId()).isEqualTo(500L);
-        assertThat(cart.getItems()).isEmpty();
-        assertThat(cart.getNotes()).isNull();
-        assertThat(cart.getRestaurantId()).isNull();
-        verify(orderService).createOrderFromCart(cart, "Checkout note");
+        assertThat(result.getOrder().getOrderId()).isEqualTo(500L);
+        assertThat(result.getPayment().getStatus()).isEqualTo("COMPLETED");
+        verify(checkoutService).checkout(cart, request);
         verify(menuItemRepository, never()).findById(any());
     }
 
