@@ -1,5 +1,7 @@
 package com.mentorship.food_delivery_app.order.controller;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +19,7 @@ public class OrderController {
     private OrderService orderService;
 
     @GetMapping("/{orderId}")
-    public OrderResponseDTO getOrderById(@PathVariable Long orderId) {
+    public OrderResponseDTO getOrderById(@PathVariable UUID orderId) {
         return orderService.getOrderById(orderId); 
     }
     

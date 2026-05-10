@@ -1,5 +1,7 @@
 package com.mentorship.food_delivery_app.cart.dto;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,8 +16,7 @@ import lombok.Setter;
 public class AddToCartRequestDTO {
 
     @NotNull(message = "menuItemId is required")
-    @Min(value = 1, message = "menuItemId must be a positive number")
-    private Long menuItemId;
+    private UUID menuItemId;
 
     @NotNull(message = "quantity is required")
     @Min(value = 1, message = "quantity must be at least 1")

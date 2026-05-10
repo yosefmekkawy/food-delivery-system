@@ -1,5 +1,19 @@
 package com.mentorship.food_delivery_app.cart.controller;
 
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.mentorship.food_delivery_app.cart.dto.AddToCartRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.CartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
@@ -7,11 +21,9 @@ import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.UpdateCartItemQuantityRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.UpdateCartItemRequestDTO;
 import com.mentorship.food_delivery_app.cart.service.CartService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller class to handle all Cart-related API requests.
@@ -29,7 +41,7 @@ public class CartController {
      * GET /api/v1/cart/{customerId}
      */
     @GetMapping("/{customerId}")
-    public ResponseEntity<CartResponseDTO> getCart(@PathVariable Long customerId) {
+    public ResponseEntity<CartResponseDTO> getCart(@PathVariable UUID customerId) {
         return ResponseEntity.ok(cartService.getCartByCustomerId(customerId));
     }
 
@@ -39,8 +51,8 @@ public class CartController {
      */
     @PutMapping("/{customerId}/items/{menuItemId}")
     public ResponseEntity<CartResponseDTO> updateCartItem(
-            @PathVariable Long customerId,
-            @PathVariable Long menuItemId,
+            @PathVariable UUID customerId,
+            @PathVariable UUID menuItemId,
             @Valid @RequestBody UpdateCartItemRequestDTO request) {
         return ResponseEntity.ok(cartService.updateCartItem(customerId, menuItemId, request));
     }
@@ -51,8 +63,8 @@ public class CartController {
      */
     @PatchMapping("/{customerId}/items/{menuItemId}/quantity")
     public ResponseEntity<CartResponseDTO> updateCartItemQuantity(
-            @PathVariable Long customerId,
-            @PathVariable Long menuItemId,
+            @PathVariable UUID customerId,
+            @PathVariable UUID menuItemId,
             @Valid @RequestBody UpdateCartItemQuantityRequestDTO request) {
         return ResponseEntity.ok(cartService.updateItemQuantity(customerId, menuItemId, request.getQuantity()));
     }
@@ -63,8 +75,8 @@ public class CartController {
      */
     @DeleteMapping("/{customerId}/items/{menuItemId}")
     public ResponseEntity<CartResponseDTO> removeCartItem(
-            @PathVariable Long customerId,
-            @PathVariable Long menuItemId) {
+            @PathVariable UUID customerId,
+            @PathVariable UUID menuItemId) {
         return ResponseEntity.ok(cartService.removeCartItem(customerId, menuItemId));
     }
 
@@ -73,7 +85,7 @@ public class CartController {
      * DELETE /api/v1/cart/{customerId}
      */
     @DeleteMapping("/{customerId}")
-    public ResponseEntity<Void> clearCart(@PathVariable Long customerId) {
+    public ResponseEntity<Void> clearCart(@PathVariable UUID customerId) {
         cartService.clearCart(customerId);
         return ResponseEntity.noContent().build();
     }
@@ -84,7 +96,7 @@ public class CartController {
      */
     @PostMapping("/{customerId}/checkout")
     public ResponseEntity<CheckoutCartResponseDTO> checkoutCart(
-            @PathVariable Long customerId,
+            @PathVariable UUID customerId,
             @Valid @RequestBody CheckoutCartRequestDTO request) {
         CheckoutCartResponseDTO checkout = cartService.checkoutCart(customerId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(checkout);
@@ -103,7 +115,7 @@ public class CartController {
      */
     @PostMapping("/{customerId}/items")
     public ResponseEntity<CartResponseDTO> addItem(
-            @PathVariable Long customerId,
+            @PathVariable UUID customerId,
             @RequestBody @Valid AddToCartRequestDTO request) {
         CartResponseDTO updatedCart = cartService.addItemToCart(customerId, request);
         return ResponseEntity.ok(updatedCart);

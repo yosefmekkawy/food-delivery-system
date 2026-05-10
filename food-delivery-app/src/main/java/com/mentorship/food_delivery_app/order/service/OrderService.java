@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
     private static final BigDecimal DELIVERY_FEE = BigDecimal.ZERO;
-    private static final String DEFAULT_ORDER_STATUS = "PLACED";
+        private static final int DEFAULT_ORDER_STATUS_ID = 1;
 
     private final OrderRepository orderRepository;
 
@@ -45,8 +46,11 @@ public class OrderService {
         order.setFee(DELIVERY_FEE);
         order.setTotal(subtotal.add(DELIVERY_FEE));
         order.setOrderedAt(LocalDateTime.now());
-        order.setStatus(DEFAULT_ORDER_STATUS);
-        order.setNote(StringUtils.hasText(checkoutNote) ? checkoutNote : cart.getNotes());
+        order.setStatusId(DEFAULT_ORDER_STATUS_ID);
+        order.setDiscountValue(BigDecimal.ZERO);
+        order.setAddressId(cart.getCustomer().getDefaultAddressId());
+        order.setNote(StringUtils.hasText(checkoutNote) ? checkoutNote : null);
+        order.setRestaurantBranchId(cart.getRestaurantId());
         orderItems.forEach(order::addItem);
 
         return orderRepository.save(order);
@@ -57,6 +61,7 @@ public class OrderService {
         BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
 
         return new OrderItem(
+                null,
                 null,
                 cartItem.getMenuItem(),
                 unitPrice,
@@ -87,14 +92,15 @@ public class OrderService {
                 order.getFee(),
                 order.getTotal(),
                 order.getNote(),
-                order.getStatus(),
+                                order.getStatusId(),
                 order.getOrderedAt()
         );
     }
     
-    public OrderResponseDTO getOrderById(Long orderId){
-       Order order = orderRepository.findById(orderId).orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + orderId));
-       return toResponse(order);
-    }
+        public OrderResponseDTO getOrderById(UUID orderId){
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + orderId));
+                return toResponse(order);
+        }
 }
 
