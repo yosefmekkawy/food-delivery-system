@@ -1,7 +1,12 @@
 package com.mentorship.food_delivery_app.payment.entity;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.entity.Order;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,12 +21,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 @Entity
-@Table(name = "\"transaction\"")
+@Table(name = "transactions")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -40,7 +41,7 @@ public class PaymentTransaction {
     @JoinColumn(name = "transaction_order_id", nullable = false)
     private Order order;
 
-    @Column(name = "transaction_payment_type", length = 20)
+    @Column(name = "transaction_payment_type", length = 50)
     private String paymentType;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,7 +49,7 @@ public class PaymentTransaction {
     private Customer customer;
 
     @Column(name = "transaction_rest_branch_id", nullable = false)
-    private Long restaurantBranchId;
+    private UUID restaurantBranchId;
 
     @Column(name = "transaction_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;

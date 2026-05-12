@@ -1,9 +1,11 @@
 package com.mentorship.food_delivery_app.cart.entity;
 
 import java.io.Serializable;
+import java.util.UUID;
+
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
  * Id class for CartItem.
@@ -13,6 +15,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class CartItemId implements Serializable {
-    private Long cart;
-    private Long menuItem;
+    private UUID cart;
+    private UUID menuItem;
 }

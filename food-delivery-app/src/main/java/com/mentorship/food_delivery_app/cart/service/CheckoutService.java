@@ -37,7 +37,6 @@ public class CheckoutService {
         );
 
         cart.clearItems();
-        cart.setNotes(null);
         cart.setRestaurantId(null);
 
         return new CheckoutCartResponseDTO(

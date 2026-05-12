@@ -1,11 +1,12 @@
 package com.mentorship.food_delivery_app.payment.service;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.entity.Order;
 import com.mentorship.food_delivery_app.payment.dto.PaymentTransactionResponseDTO;
 import com.mentorship.food_delivery_app.payment.entity.PaymentTransaction;
-
-import java.math.BigDecimal;
 
 public interface PaymentService {
 
@@ -15,7 +16,7 @@ public interface PaymentService {
 
     record PaymentCommand(Order order,
                           Customer customer,
-                          Long restaurantBranchId,
+                          UUID restaurantBranchId,
                           String paymentIntegrationType,
                           BigDecimal amount) {
     }

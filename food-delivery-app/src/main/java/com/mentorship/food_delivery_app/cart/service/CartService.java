@@ -1,31 +1,34 @@
 package com.mentorship.food_delivery_app.cart.service;
 
+import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.mentorship.food_delivery_app.cart.dto.AddToCartRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.CartItemResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.UpdateCartItemRequestDTO;
+import com.mentorship.food_delivery_app.cart.entity.Cart;
+import com.mentorship.food_delivery_app.cart.entity.CartItem;
 import com.mentorship.food_delivery_app.cart.exceptions.CartItemNotFoundException;
 import com.mentorship.food_delivery_app.cart.exceptions.CartLockedException;
 import com.mentorship.food_delivery_app.cart.exceptions.CartNotFoundException;
 import com.mentorship.food_delivery_app.cart.exceptions.EmptyCartException;
 import com.mentorship.food_delivery_app.cart.exceptions.MenuItemNotFoundException;
-import com.mentorship.food_delivery_app.cart.entity.Cart;
-import com.mentorship.food_delivery_app.cart.entity.CartItem;
 import com.mentorship.food_delivery_app.cart.repository.CartItemRepository;
 import com.mentorship.food_delivery_app.cart.repository.CartRepository;
 import com.mentorship.food_delivery_app.cart.repository.MenuItemRepository;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Service class for Cart operations.
@@ -44,7 +47,7 @@ public class CartService {
      * Retrieves the cart for a user and calculates all totals.
      */
     @Transactional(readOnly = true)
-    public CartResponseDTO getCartByCustomerId(Long customerId) {
+    public CartResponseDTO getCartByCustomerId(UUID customerId) {
         Cart cart = findCartByCustomerId(customerId);
         return buildCartResponse(cart);
     }
@@ -53,7 +56,7 @@ public class CartService {
      * Updates the quantity and/or note of an existing item in the customer's cart.
      */
     @Transactional
-    public CartResponseDTO updateCartItem(Long customerId, Long menuItemId, UpdateCartItemRequestDTO request) {
+    public CartResponseDTO updateCartItem(UUID customerId, UUID menuItemId, UpdateCartItemRequestDTO request) {
         Cart cart = findCartByCustomerId(customerId);
         validateCartIsMutable(cart, "updated");
         CartItem item = findCartItem(cart, customerId, menuItemId);
@@ -68,7 +71,7 @@ public class CartService {
      * Updates the quantity only for a cart item.
      */
     @Transactional
-    public CartResponseDTO updateItemQuantity(Long customerId, Long menuItemId, Integer quantity) {
+    public CartResponseDTO updateItemQuantity(UUID customerId, UUID menuItemId, Integer quantity) {
         Cart cart = findCartByCustomerId(customerId);
         validateCartIsMutable(cart, "updated");
 
@@ -82,7 +85,7 @@ public class CartService {
      * Removes a single item from the customer's cart.
      */
     @Transactional
-    public CartResponseDTO removeCartItem(Long customerId, Long menuItemId) {
+    public CartResponseDTO removeCartItem(UUID customerId, UUID menuItemId) {
         Cart cart = findCartByCustomerId(customerId);
         validateCartIsMutable(cart, "modified");
 
@@ -97,7 +100,7 @@ public class CartService {
      * Converts the customer's cart into an order snapshot and clears the active cart.
      */
     @Transactional
-    public CheckoutCartResponseDTO checkoutCart(Long customerId, CheckoutCartRequestDTO request) {
+    public CheckoutCartResponseDTO checkoutCart(UUID customerId, CheckoutCartRequestDTO request) {
         Cart cart = findCartByCustomerId(customerId);
         validateCartIsMutable(cart, "checked out");
         ensureCartHasItems(customerId, cart);
@@ -105,18 +108,18 @@ public class CartService {
     }
 
     /**
-     * Clears all items (and resets restaurant / notes) from the customer's cart.
+     * Clears all items (and resets restaurant) from the customer's cart.
      * The cart record itself is kept so the customer can keep using it.
      */
     @Transactional
-    public void clearCart(Long customerId) {
+    public void clearCart(UUID customerId) {
         Cart cart = findCartByCustomerId(customerId);
         validateCartIsMutable(cart, "cleared");
         cart.clearItems();
         resetCartMetadataIfEmpty(cart);
     }
 
-    private Cart findCartByCustomerId(Long customerId) {
+    private Cart findCartByCustomerId(UUID customerId) {
         return cartRepository.findByCustomerId(customerId)
                 .orElseThrow(() -> new CartNotFoundException(customerId));
     }
@@ -132,10 +135,9 @@ public class CartService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new CartResponseDTO(
-                cart.getId(),
-                itemDTOs,
-                grandTotal,
-                cart.getNotes()
+            cart.getId(),
+            itemDTOs,
+            grandTotal
         );
     }
 
@@ -145,7 +147,7 @@ public class CartService {
      * - If the item is new → create a new CartItem row.
      */
     @Transactional
-    public CartResponseDTO addItemToCart(Long customerId, AddToCartRequestDTO request) {
+    public CartResponseDTO addItemToCart(UUID customerId, AddToCartRequestDTO request) {
         Cart cart = findCartByCustomerId(customerId);
         validateCartIsMutable(cart, "modified");
 
@@ -163,7 +165,7 @@ public class CartService {
                 existingItem.setNote(request.getNote());
             }
         } else {
-            CartItem newItem = new CartItem(cart, menuItem, request.getQuantity(), request.getNote());
+            CartItem newItem = new CartItem(null, cart, menuItem, request.getQuantity(), request.getNote());
             cart.addItem(newItem);
         }
 
@@ -194,12 +196,12 @@ public class CartService {
         }
     }
 
-    private CartItem findCartItem(Cart cart, Long customerId, Long menuItemId) {
+    private CartItem findCartItem(Cart cart, UUID customerId, UUID menuItemId) {
         return cartItemRepository.findByCartIdAndMenuItemId(cart.getId(), menuItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(customerId, menuItemId));
     }
 
-    private void ensureCartHasItems(Long customerId, Cart cart) {
+    private void ensureCartHasItems(UUID customerId, Cart cart) {
         if (!cartItemRepository.existsByCartId(cart.getId())) {
             throw new EmptyCartException(customerId);
         }
@@ -208,7 +210,6 @@ public class CartService {
     private void resetCartMetadataIfEmpty(Cart cart) {
         if (cart.getItems().isEmpty()) {
             cart.setRestaurantId(null);
-            cart.setNotes(null);
         }
     }
 }

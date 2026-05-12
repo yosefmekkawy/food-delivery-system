@@ -1,4 +1,4 @@
-package com.mentorship.food_delivery_app.payment.entity;
+package com.mentorship.food_delivery_app.order.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,22 +12,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "payment_type_config")
+@Table(name = "order_status")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentTypeConfig {
+public class OrderStatus {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_type_config_id")
-    private Long id;
+    @Column(name = "order_status_id", nullable = false, updatable = false)
+    private Integer id;
 
-    @Column(name = "payment_integration_type", nullable = false, length = 50)
-    private String paymentIntegrationType;
+    @Column(name = "order_status_name", nullable = false, unique = true, length = 50)
+    private String name;
 
-    @Column(name = "config_details", nullable = false, columnDefinition = "jsonb")
-    private String configDetails;
+    @Column(name = "order_status_description", length = 255)
+    private String description;
 }
-

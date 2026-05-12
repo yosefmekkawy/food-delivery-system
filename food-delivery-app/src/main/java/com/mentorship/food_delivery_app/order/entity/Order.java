@@ -1,6 +1,13 @@
 package com.mentorship.food_delivery_app.order.entity;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import com.mentorship.food_delivery_app.customer.entity.Customer;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,11 +24,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "orders")
 @Getter
@@ -31,9 +33,12 @@ import java.util.List;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "order_id")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "order_id", nullable = false, updatable = false)
+    private UUID id;
+
+    @Column(name = "order_address_id", nullable = false)
+    private UUID addressId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_customer_id", nullable = false)
@@ -54,8 +59,18 @@ public class Order {
     @Column(name = "order_note")
     private String note;
 
-    @Column(name = "order_status", nullable = false, length = 50)
-    private String status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_status_id", nullable = false)
+    private OrderStatus status;
+
+    @Column(name = "order_restaurant_branch_id", nullable = false)
+    private UUID restaurantBranchId;
+
+    @Column(name = "order_coupon_id")
+    private UUID couponId;
+
+    @Column(name = "order_discount_value", precision = 6, scale = 2)
+    private BigDecimal discountValue;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
