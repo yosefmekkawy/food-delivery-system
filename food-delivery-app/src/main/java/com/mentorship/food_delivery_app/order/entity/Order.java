@@ -59,8 +59,9 @@ public class Order {
     @Column(name = "order_note")
     private String note;
 
-    @Column(name = "order_status_id", nullable = false)
-    private Integer statusId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_status_id", nullable = false)
+    private OrderStatus status;
 
     @Column(name = "order_restaurant_branch_id", nullable = false)
     private UUID restaurantBranchId;

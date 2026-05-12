@@ -25,6 +25,7 @@ import com.mentorship.food_delivery_app.cart.entity.CartItem;
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import com.mentorship.food_delivery_app.order.entity.Order;
+import com.mentorship.food_delivery_app.order.entity.OrderStatus;
 import com.mentorship.food_delivery_app.order.service.OrderService;
 import com.mentorship.food_delivery_app.payment.dto.PaymentTransactionResponseDTO;
 import com.mentorship.food_delivery_app.payment.entity.PaymentTransaction;
@@ -59,7 +60,7 @@ class CheckoutServiceTest {
         order.setSubtotal(new BigDecimal("25.00"));
         order.setFee(BigDecimal.ZERO);
         order.setTotal(new BigDecimal("25.00"));
-        order.setStatusId(1);
+        order.setStatus(new OrderStatus(1, "CREATED", null));
         order.setOrderedAt(LocalDateTime.now());
         order.setNote("Leave at the gate");
         order.setRestaurantBranchId(branchId);
