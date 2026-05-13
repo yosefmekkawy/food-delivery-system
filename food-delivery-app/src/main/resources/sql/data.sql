@@ -242,7 +242,13 @@ WHERE NOT EXISTS (
 
 -- 11. Order status
 INSERT INTO order_status (order_status_name, order_status_description)
-VALUES ('PLACED', 'Order placed')
+VALUES
+  ('PLACED', 'Order placed'),
+  ('DELIVERED', 'Order delivered to customer'),
+  ('RETURN_REQUESTED', 'Customer requested to return the order'),
+  ('RETURNED', 'Order returned and confirmed by the restaurant'),
+  ('CANCELLED', 'Order cancelled'),
+  ('FAILED', 'Order failed')
 ON CONFLICT (order_status_name) DO NOTHING;
 
 -- 12. Orders

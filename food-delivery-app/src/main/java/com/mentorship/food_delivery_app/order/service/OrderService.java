@@ -18,6 +18,8 @@ import com.mentorship.food_delivery_app.order.entity.Order;
 import com.mentorship.food_delivery_app.order.entity.OrderItem;
 import com.mentorship.food_delivery_app.order.entity.OrderStatus;
 import com.mentorship.food_delivery_app.order.entity.OrderTracking;
+import com.mentorship.food_delivery_app.order.exceptions.InvalidOrderStateException;
+import com.mentorship.food_delivery_app.order.exceptions.OrderNotFoundException;
 import com.mentorship.food_delivery_app.order.repository.OrderRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderStatusRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderTrackingRepository;
@@ -31,11 +33,16 @@ public class OrderService {
 
     private static final BigDecimal DELIVERY_FEE = BigDecimal.ZERO;
     private static final int DEFAULT_ORDER_STATUS_ID = 1;
+        private static final String STATUS_PLACED = "PLACED";
+        private static final String STATUS_DELIVERED = "DELIVERED";
+        private static final String STATUS_RETURN_REQUESTED = "RETURN_REQUESTED";
+        private static final String STATUS_RETURNED = "RETURNED";
+        private static final String STATUS_CANCELLED = "CANCELLED";
         private static final List<String> FINAL_STATUSES = List.of(
                         "FAILED",
-                        "RETURNED",
-                        "DELIVERED",
-                        "CANCELLED"
+                        STATUS_RETURNED,
+                        STATUS_DELIVERED,
+                        STATUS_CANCELLED
         );
 
     private final OrderRepository orderRepository;
@@ -149,6 +156,90 @@ public class OrderService {
                 orderTrackingRepository.save(orderTracking);
 
                 return "order with orderID: " + orderId.toString() + "has changed to status: " + status.getName();
-        }       
+        }
+
+        @Transactional
+        public OrderResponseDTO requestReturn(UUID orderId, String reason) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+                if (!STATUS_DELIVERED.equals(order.getStatus().getName())) {
+                        throw new InvalidOrderStateException(
+                                        "Order can only be returned when its status is " + STATUS_DELIVERED
+                                                        + ". Current status: " + order.getStatus().getName());
+                }
+
+                OrderStatus returnRequested = getStatusByNameOrThrow(STATUS_RETURN_REQUESTED);
+                order.setStatus(returnRequested);
+                Order saved = orderRepository.save(order);
+
+                appendTracking(saved, returnRequested, "Return requested by customer: " + reason);
+
+                return toResponse(saved);
+        }
+
+        @Transactional
+        public OrderResponseDTO approveReturn(UUID orderId) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+                if (!STATUS_RETURN_REQUESTED.equals(order.getStatus().getName())) {
+                        throw new InvalidOrderStateException(
+                                        "Return can only be approved when order status is " + STATUS_RETURN_REQUESTED
+                                                        + ". Current status: " + order.getStatus().getName());
+                }
+
+                OrderStatus returned = getStatusByNameOrThrow(STATUS_RETURNED);
+                order.setStatus(returned);
+                Order saved = orderRepository.save(order);
+
+                appendTracking(saved, returned, "Return approved by restaurant");
+
+                return toResponse(saved);
+        }
+
+        @Transactional
+        public OrderResponseDTO cancelByCustomer(UUID orderId, String reason) {
+                return cancelOrder(orderId, "Cancelled by customer: " + reason);
+        }
+
+        @Transactional
+        public OrderResponseDTO rejectByRestaurant(UUID orderId, String reason) {
+                return cancelOrder(orderId, "Rejected by restaurant: " + reason);
+        }
+
+        private OrderResponseDTO cancelOrder(UUID orderId, String trackingDescription) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+                if (!STATUS_PLACED.equals(order.getStatus().getName())) {
+                        throw new InvalidOrderStateException(
+                                        "Order can only be cancelled when its status is " + STATUS_PLACED
+                                                        + ". Current status: " + order.getStatus().getName());
+                }
+
+                OrderStatus cancelled = getStatusByNameOrThrow(STATUS_CANCELLED);
+                order.setStatus(cancelled);
+                Order saved = orderRepository.save(order);
+
+                appendTracking(saved, cancelled, trackingDescription);
+
+                return toResponse(saved);
+        }
+
+        private OrderStatus getStatusByNameOrThrow(String name) {
+                return orderStatusRepository.findByName(name)
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Required order status not configured: " + name));
+        }
+
+        private void appendTracking(Order order, OrderStatus status, String description) {
+                OrderTracking tracking = new OrderTracking();
+                tracking.setOrder(order);
+                tracking.setStatus(status);
+                tracking.setDescription(description);
+                tracking.setCreatedAt(LocalDateTime.now());
+                orderTrackingRepository.save(tracking);
+        }
 }
 
