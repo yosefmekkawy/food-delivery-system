@@ -22,6 +22,7 @@ import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
 import com.mentorship.food_delivery_app.cart.entity.Cart;
 import com.mentorship.food_delivery_app.cart.entity.CartItem;
+import com.mentorship.food_delivery_app.common.notification.NotificationService;
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import com.mentorship.food_delivery_app.order.entity.Order;
@@ -33,6 +34,7 @@ import com.mentorship.food_delivery_app.payment.exceptions.PaymentConfigurationN
 import com.mentorship.food_delivery_app.payment.exceptions.RestaurantBranchRequiredException;
 import com.mentorship.food_delivery_app.payment.service.PaymentService;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
+import com.mentorship.food_delivery_app.restaurant.service.CouponService;
 
 @ExtendWith(MockitoExtension.class)
 class CheckoutServiceTest {
@@ -43,6 +45,12 @@ class CheckoutServiceTest {
     @Mock
     private PaymentService paymentService;
 
+    @Mock
+    private CouponService couponService;
+
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private CheckoutService checkoutService;
 
@@ -52,7 +60,7 @@ class CheckoutServiceTest {
         UUID branchId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
         Cart cart = createCart(UUID.fromString("22222222-2222-2222-2222-222222222222"), customerId, branchId);
         addItem(cart, UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "Burger", new BigDecimal("25.00"), 1, "No onions");
-        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("Leave at the gate", "card");
+        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("Leave at the gate", "card", null);
 
         Order order = new Order();
         order.setId(UUID.fromString("33333333-3333-3333-3333-333333333333"));
@@ -91,7 +99,7 @@ class CheckoutServiceTest {
                 transaction.getTransactionTime()
         );
 
-        when(orderService.createOrderFromCart(cart, "Leave at the gate")).thenReturn(order);
+        when(orderService.createOrderFromCart(any(), any(), any(), any())).thenReturn(order);
         when(paymentService.processPayment(any(PaymentService.PaymentCommand.class))).thenReturn(transaction);
         when(orderService.toResponse(order)).thenReturn(orderResponse);
         when(paymentService.toResponse(transaction)).thenReturn(paymentResponse);
@@ -119,14 +127,15 @@ class CheckoutServiceTest {
         UUID branchId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
         Cart cart = createCart(UUID.fromString("44444444-4444-4444-4444-444444444444"), customerId, branchId);
         addItem(cart, UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc"), "Soda", new BigDecimal("5.00"), 2, null);
-        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("", "CARD");
+        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("", "CARD", null);
 
         Order order = new Order();
         order.setId(UUID.fromString("55555555-5555-5555-5555-555555555555"));
         order.setCustomer(cart.getCustomer());
         order.setTotal(new BigDecimal("10.00"));
 
-        when(orderService.createOrderFromCart(cart, "")).thenReturn(order);
+        when(orderService.createOrderFromCart(any(), any(), any(), any()))
+                .thenReturn(order);
         when(paymentService.processPayment(any(PaymentService.PaymentCommand.class)))
                 .thenThrow(new PaymentConfigurationNotFoundException("CARD"));
 
@@ -144,11 +153,11 @@ class CheckoutServiceTest {
         Cart cart = createCart(UUID.fromString("66666666-6666-6666-6666-666666666666"), customerId, null);
         addItem(cart, UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd"), "Pizza", new BigDecimal("18.00"), 1, null);
 
-        assertThatThrownBy(() -> checkoutService.checkout(cart, new CheckoutCartRequestDTO("Call on arrival", "CARD")))
+        assertThatThrownBy(() -> checkoutService.checkout(cart, new CheckoutCartRequestDTO("Call on arrival", "CARD", null)))
                 .isInstanceOf(RestaurantBranchRequiredException.class)
                 .hasMessage("Checkout requires a restaurant branch for customer ID: " + customerId);
 
-        verify(orderService, never()).createOrderFromCart(any(), any());
+        verify(orderService, never()).createOrderFromCart(any(), any(), any(), any());
         verify(paymentService, never()).processPayment(any());
     }
 

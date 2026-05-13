@@ -60,6 +60,11 @@ public class OrderService {
 
     @Transactional
     public Order createOrderFromCart(Cart cart, String checkoutNote) {
+        return createOrderFromCart(cart, checkoutNote, null, BigDecimal.ZERO);
+    }
+
+    @Transactional
+    public Order createOrderFromCart(Cart cart, String checkoutNote, UUID couponId, BigDecimal discountValue) {
         List<OrderItem> orderItems = cart.getItems().stream()
                 .sorted(Comparator.comparing(item -> item.getMenuItem().getId()))
                 .map(this::mapToOrderItem)
@@ -69,17 +74,21 @@ public class OrderService {
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal resolvedDiscount = discountValue != null ? discountValue : BigDecimal.ZERO;
+        BigDecimal total = subtotal.add(DELIVERY_FEE).subtract(resolvedDiscount).max(BigDecimal.ZERO);
+
         Order order = new Order();
         order.setCustomer(cart.getCustomer());
         order.setSubtotal(subtotal);
         order.setFee(DELIVERY_FEE);
-        order.setTotal(subtotal.add(DELIVERY_FEE));
+        order.setDiscountValue(resolvedDiscount);
+        order.setTotal(total);
         order.setOrderedAt(LocalDateTime.now());
         order.setStatus(getStatusOrThrow(DEFAULT_ORDER_STATUS_ID));
-        order.setDiscountValue(BigDecimal.ZERO);
         order.setAddressId(cart.getCustomer().getDefaultAddressId());
         order.setNote(StringUtils.hasText(checkoutNote) ? checkoutNote : null);
         order.setRestaurantBranchId(cart.getRestaurantId());
+        order.setCouponId(couponId);
         orderItems.forEach(order::addItem);
 
         return orderRepository.save(order);

@@ -94,7 +94,7 @@ class CartServiceTest {
         addItem(cart, UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd"), "Fries", new BigDecimal("5.00"), 1, null);
         cart.setRestaurantId(UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"));
 
-        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("Checkout note", "CARD");
+        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("Checkout note", "CARD", null);
         CheckoutCartResponseDTO checkoutResponse = new CheckoutCartResponseDTO(
                 new OrderResponseDTO(
                     UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"),
