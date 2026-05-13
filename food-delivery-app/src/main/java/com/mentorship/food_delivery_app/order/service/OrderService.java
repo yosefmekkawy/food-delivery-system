@@ -12,8 +12,12 @@ import org.springframework.util.StringUtils;
 
 import com.mentorship.food_delivery_app.cart.entity.Cart;
 import com.mentorship.food_delivery_app.cart.entity.CartItem;
+import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.dto.OrderItemResponseDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderSummaryCustomerDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderSummaryDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderSummaryPaymentDTO;
 import com.mentorship.food_delivery_app.order.entity.Order;
 import com.mentorship.food_delivery_app.order.entity.OrderItem;
 import com.mentorship.food_delivery_app.order.entity.OrderStatus;
@@ -23,7 +27,10 @@ import com.mentorship.food_delivery_app.order.exceptions.OrderNotFoundException;
 import com.mentorship.food_delivery_app.order.repository.OrderRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderStatusRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderTrackingRepository;
+import com.mentorship.food_delivery_app.payment.entity.PaymentTransaction;
+import com.mentorship.food_delivery_app.payment.repository.PaymentTransactionRepository;
 import com.mentorship.food_delivery_app.restaurant.repository.RestaurantBranchRepository;
+import com.mentorship.food_delivery_app.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +56,7 @@ public class OrderService {
     private final OrderStatusRepository orderStatusRepository;
     private final OrderTrackingRepository orderTrackingRepository;
         private final RestaurantBranchRepository restaurantBranchRepository;
+        private final PaymentTransactionRepository paymentTransactionRepository;
 
     @Transactional
     public Order createOrderFromCart(Cart cart, String checkoutNote) {
@@ -124,6 +132,73 @@ public class OrderService {
                 return toResponse(order);
         }
 
+        @Transactional(readOnly = true)
+        public OrderSummaryDTO getOrderSummary(UUID orderId) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+                List<OrderItemResponseDTO> items = order.getItems().stream()
+                                .sorted(Comparator.comparing(item -> item.getMenuItem().getId()))
+                                .map(item -> new OrderItemResponseDTO(
+                                                item.getMenuItem().getId(),
+                                                item.getMenuItem().getName(),
+                                                item.getQuantity(),
+                                                item.getUnitPrice(),
+                                                item.getSubtotal(),
+                                                item.getNote()))
+                                .toList();
+
+                int totalQuantity = items.stream()
+                                .mapToInt(OrderItemResponseDTO::getQuantity)
+                                .sum();
+
+                OrderSummaryPaymentDTO paymentDto = paymentTransactionRepository
+                                .findTopByOrder_IdOrderByTransactionTimeDesc(orderId)
+                                .map(this::toPaymentSummary)
+                                .orElse(null);
+
+                return OrderSummaryDTO.builder()
+                                .orderId(order.getId())
+                                .orderedAt(order.getOrderedAt())
+                                .statusId(order.getStatus().getId())
+                                .statusName(order.getStatus().getName())
+                                .customer(toCustomerSummary(order.getCustomer()))
+                                .restaurantBranchId(order.getRestaurantBranchId())
+                                .deliveryAddressId(order.getAddressId())
+                                .items(items)
+                                .distinctItemCount(items.size())
+                                .totalQuantity(totalQuantity)
+                                .subtotal(order.getSubtotal())
+                                .deliveryFee(order.getFee())
+                                .discountValue(order.getDiscountValue())
+                                .totalAmount(order.getTotal())
+                                .payment(paymentDto)
+                                .note(order.getNote())
+                                .build();
+        }
+
+        private OrderSummaryCustomerDTO toCustomerSummary(Customer customer) {
+                User user = customer.getUser();
+                String fullName = (user.getFirstName() == null ? "" : user.getFirstName())
+                                + (user.getLastName() == null ? "" : " " + user.getLastName());
+                return OrderSummaryCustomerDTO.builder()
+                                .customerId(customer.getId())
+                                .fullName(fullName.trim())
+                                .phone(user.getPhone())
+                                .email(user.getEmail())
+                                .build();
+        }
+
+        private OrderSummaryPaymentDTO toPaymentSummary(PaymentTransaction tx) {
+                return OrderSummaryPaymentDTO.builder()
+                                .transactionId(tx.getId())
+                                .paymentType(tx.getPaymentType())
+                                .status(tx.getStatus())
+                                .amount(tx.getAmount())
+                                .transactionTime(tx.getTransactionTime())
+                                .build();
+        }
+
         public List<OrderResponseDTO> getActiveOrdersForRestaurant(UUID restaurantId) {
                 List<UUID> branchIds = restaurantBranchRepository.findIdsByRestaurantId(restaurantId);
                 if (branchIds.isEmpty()) {
@@ -155,7 +230,7 @@ public class OrderService {
                 orderTracking.setCreatedAt(LocalDateTime.now());
                 orderTrackingRepository.save(orderTracking);
 
-                return "order with orderID: " + orderId.toString() + "has changed to status: " + status.getName();
+                return "order with orderID: " + orderId + " has changed to status: " + status.getName();
         }
 
         @Transactional

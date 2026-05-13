@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mentorship.food_delivery_app.order.dto.CancelOrderRequestDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderSummaryDTO;
 import com.mentorship.food_delivery_app.order.dto.ReturnOrderRequestDTO;
 import com.mentorship.food_delivery_app.order.service.OrderService;
 
@@ -30,6 +31,11 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public OrderResponseDTO getOrderById(@PathVariable UUID orderId) {
         return orderService.getOrderById(orderId);
+    }
+
+    @GetMapping("/{orderId}/summary")
+    public OrderSummaryDTO getOrderSummary(@PathVariable UUID orderId) {
+        return orderService.getOrderSummary(orderId);
     }
 
     @GetMapping("/restaurant/{restaurantId}/active")
