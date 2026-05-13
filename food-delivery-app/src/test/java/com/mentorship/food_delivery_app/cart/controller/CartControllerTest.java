@@ -123,7 +123,7 @@ class CartControllerTest {
 
         mockMvc.perform(post("/api/v1/cart/{customerId}/checkout", customerId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new CheckoutCartRequestDTO("Leave at the gate", "CARD"))))
+                        .content(objectMapper.writeValueAsString(new CheckoutCartRequestDTO("Leave at the gate", "CARD", null))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.order.orderId").value(orderId.toString()))
                 .andExpect(jsonPath("$.order.customerId").value(customerId.toString()))

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 /**
  * Request DTO for checking out the customer's active cart.
  */
@@ -19,5 +21,7 @@ public class CheckoutCartRequestDTO {
 
     @NotBlank(message = "Payment integration type is required")
     private String paymentIntegrationType;
+
+    private UUID couponId;
 }
 
