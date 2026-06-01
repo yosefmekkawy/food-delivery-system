@@ -3,7 +3,6 @@ package com.mentorship.food_delivery_app.order.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,13 +19,14 @@ import com.mentorship.food_delivery_app.order.dto.ReturnOrderRequestDTO;
 import com.mentorship.food_delivery_app.order.service.OrderService;
 
 import jakarta.validation.Valid;
-
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/orders")
+@RequiredArgsConstructor
 public class OrderController {
-    @Autowired
-    private OrderService orderService;
+
+    private final OrderService orderService;
 
     @GetMapping("/{orderId}")
     public OrderResponseDTO getOrderById(@PathVariable UUID orderId) {
