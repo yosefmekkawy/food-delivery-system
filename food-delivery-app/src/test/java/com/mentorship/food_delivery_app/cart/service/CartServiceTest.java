@@ -29,6 +29,7 @@ import com.mentorship.food_delivery_app.cart.repository.MenuItemRepository;
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import com.mentorship.food_delivery_app.payment.dto.PaymentTransactionResponseDTO;
+import com.mentorship.food_delivery_app.order.service.CheckoutService;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
 
 @ExtendWith(MockitoExtension.class)
