@@ -64,7 +64,7 @@ public class CheckoutService {
         cart.setRestaurantId(null);
 
         notificationService.notifyCustomerOrderPlaced(order);
-        notificationService.notifyRestaurantNewOrder(order, order.getRestaurantBranchId());
+        notificationService.notifyRestaurantNewOrder(order, order.getRestaurantBranch().getId());
 
         return new CheckoutCartResponseDTO(
                 orderService.toResponse(order),

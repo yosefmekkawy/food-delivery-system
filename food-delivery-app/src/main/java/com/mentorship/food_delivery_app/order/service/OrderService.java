@@ -29,6 +29,7 @@ import com.mentorship.food_delivery_app.order.repository.OrderStatusRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderTrackingRepository;
 import com.mentorship.food_delivery_app.payment.entity.PaymentTransaction;
 import com.mentorship.food_delivery_app.payment.repository.PaymentTransactionRepository;
+import com.mentorship.food_delivery_app.restaurant.entity.RestaurantBranch;
 import com.mentorship.food_delivery_app.restaurant.repository.RestaurantBranchRepository;
 import com.mentorship.food_delivery_app.user.entity.User;
 
@@ -87,7 +88,7 @@ public class OrderService {
         order.setStatus(getStatusOrThrow(DEFAULT_ORDER_STATUS_ID));
         order.setAddressId(cart.getCustomer().getDefaultAddressId());
         order.setNote(StringUtils.hasText(checkoutNote) ? checkoutNote : null);
-        order.setRestaurantBranchId(cart.getRestaurantId());
+        order.setRestaurantBranch(getRestaurantBranchOrThrow(cart.getRestaurantId()));
         order.setCouponId(couponId);
         orderItems.forEach(order::addItem);
 
@@ -172,7 +173,7 @@ public class OrderService {
                                 .statusId(order.getStatus().getId())
                                 .statusName(order.getStatus().getName())
                                 .customer(toCustomerSummary(order.getCustomer()))
-                                .restaurantBranchId(order.getRestaurantBranchId())
+                                .restaurantBranchId(order.getRestaurantBranch().getId())
                                 .deliveryAddressId(order.getAddressId())
                                 .items(items)
                                 .distinctItemCount(items.size())
@@ -223,6 +224,11 @@ public class OrderService {
         private OrderStatus getStatusOrThrow(Integer statusId) {
                 return orderStatusRepository.findById(statusId)
                                 .orElseThrow(() -> new IllegalArgumentException("Order status not found with id: " + statusId));
+        }
+
+        private RestaurantBranch getRestaurantBranchOrThrow(UUID restaurantBranchId) {
+                return restaurantBranchRepository.findById(restaurantBranchId)
+                                .orElseThrow(() -> new IllegalArgumentException("Restaurant branch not found with id: " + restaurantBranchId));
         }
 
         @Transactional

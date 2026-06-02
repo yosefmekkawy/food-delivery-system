@@ -13,7 +13,9 @@ import com.mentorship.food_delivery_app.order.entity.Order;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-	@Query("select o from Order o join o.status s where o.restaurantBranchId in :branchIds and s.name not in :excludedStatuses")
+	boolean existsByAddressId(UUID addressId);
+
+	@Query("select o from Order o join o.status s where o.restaurantBranch.id in :branchIds and s.name not in :excludedStatuses")
 	List<Order> findActiveByBranchIds(@Param("branchIds") List<UUID> branchIds,
 									  @Param("excludedStatuses") List<String> excludedStatuses);
 }

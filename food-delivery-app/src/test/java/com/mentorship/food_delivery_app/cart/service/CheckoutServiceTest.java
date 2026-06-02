@@ -14,6 +14,7 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +35,7 @@ import com.mentorship.food_delivery_app.payment.exceptions.PaymentConfigurationN
 import com.mentorship.food_delivery_app.payment.exceptions.RestaurantBranchRequiredException;
 import com.mentorship.food_delivery_app.payment.service.PaymentService;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
+import com.mentorship.food_delivery_app.restaurant.entity.RestaurantBranch;
 import com.mentorship.food_delivery_app.restaurant.service.CouponService;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,9 +48,11 @@ class CheckoutServiceTest {
     private PaymentService paymentService;
 
     @Mock
+    @SuppressWarnings("unused")
     private CouponService couponService;
 
     @Mock
+    @SuppressWarnings("unused")
     private NotificationService notificationService;
 
     @InjectMocks
@@ -71,7 +75,9 @@ class CheckoutServiceTest {
         order.setStatus(new OrderStatus(1, "CREATED", null));
         order.setOrderedAt(LocalDateTime.now());
         order.setNote("Leave at the gate");
-        order.setRestaurantBranchId(branchId);
+        RestaurantBranch branch = new RestaurantBranch();
+        branch.setId(branchId);
+        order.setRestaurantBranch(branch);
 
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setId(UUID.randomUUID());
@@ -119,6 +125,9 @@ class CheckoutServiceTest {
         assertThat(response.getPayment()).isSameAs(paymentResponse);
         assertThat(cart.getItems()).isEmpty();
         assertThat(cart.getRestaurantId()).isNull();
+        verify(couponService, never()).apply(any(), any(), any());
+        verify(notificationService, times(1)).notifyCustomerOrderPlaced(order);
+        verify(notificationService, times(1)).notifyRestaurantNewOrder(order, branchId);
     }
 
     @Test
@@ -145,6 +154,9 @@ class CheckoutServiceTest {
 
         assertThat(cart.getItems()).hasSize(1);
         assertThat(cart.getRestaurantId()).isEqualTo(branchId);
+        verify(couponService, never()).apply(any(), any(), any());
+        verify(notificationService, never()).notifyCustomerOrderPlaced(any());
+        verify(notificationService, never()).notifyRestaurantNewOrder(any(), any());
     }
 
     @Test
@@ -159,6 +171,9 @@ class CheckoutServiceTest {
 
         verify(orderService, never()).createOrderFromCart(any(), any(), any(), any());
         verify(paymentService, never()).processPayment(any());
+        verify(couponService, never()).apply(any(), any(), any());
+        verify(notificationService, never()).notifyCustomerOrderPlaced(any());
+        verify(notificationService, never()).notifyRestaurantNewOrder(any(), any());
     }
 
     private Cart createCart(UUID cartId, UUID customerId, UUID restaurantId) {
