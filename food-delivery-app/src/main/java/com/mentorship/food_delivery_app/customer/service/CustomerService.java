@@ -19,8 +19,10 @@ import com.mentorship.food_delivery_app.customer.dto.CustomerAddressResponseDTO;
 import com.mentorship.food_delivery_app.customer.dto.CustomerOrderItemResponse;
 import com.mentorship.food_delivery_app.customer.dto.CustomerOrderResponse;
 import com.mentorship.food_delivery_app.customer.dto.CustomerPreferredPaymentResponseDTO;
+import com.mentorship.food_delivery_app.customer.dto.CustomerStatusResponseDTO;
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.customer.entity.CustomerAddress;
+import com.mentorship.food_delivery_app.user.entity.User;
 import com.mentorship.food_delivery_app.customer.exceptions.CustomerNotFoundException;
 import com.mentorship.food_delivery_app.customer.exceptions.CustomerObjectrdersNotFoundException;
 import com.mentorship.food_delivery_app.customer.repository.CustomerAddressRepository;
@@ -206,6 +208,20 @@ public class CustomerService {
                 .build();
     }
     
+    @Transactional
+    public CustomerStatusResponseDTO deactivateCustomer(UUID customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+        User user = customer.getUser();
+        if (Boolean.TRUE.equals(user.getIsEnabled())) {
+            user.setIsEnabled(false);
+        }
+        return CustomerStatusResponseDTO.builder()
+                .customerId(customer.getId())
+                .active(false)
+                .build();
+    }
+
     @Transactional
     public CustomerPreferredPaymentResponseDTO setCustomerPreferredPayment(Long preferredPaymentId, UUID customerId) {
         Customer customer = customerRepository.findById(customerId).orElseThrow(() -> new CustomerNotFoundException(customerId));
