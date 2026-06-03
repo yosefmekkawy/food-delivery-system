@@ -18,6 +18,7 @@ import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderSummaryCustomerDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderSummaryDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderSummaryPaymentDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderTrackingResponseDTO;
 import com.mentorship.food_delivery_app.order.entity.Order;
 import com.mentorship.food_delivery_app.order.entity.OrderItem;
 import com.mentorship.food_delivery_app.order.entity.OrderStatus;
@@ -315,6 +316,19 @@ public class OrderService {
                 return orderStatusRepository.findByName(name)
                                 .orElseThrow(() -> new IllegalStateException(
                                                 "Required order status not configured: " + name));
+        }
+
+        public List<OrderTrackingResponseDTO> getOrderTracking(UUID orderId) {
+                if (!orderRepository.existsById(orderId)) {
+                        throw new OrderNotFoundException(orderId);
+                }
+                return orderTrackingRepository.findAllByOrder_IdOrderByCreatedAtAsc(orderId).stream()
+                                .map(t -> OrderTrackingResponseDTO.builder()
+                                                .status(t.getStatus() != null ? t.getStatus().getName() : null)
+                                                .description(t.getDescription())
+                                                .createdAt(t.getCreatedAt())
+                                                .build())
+                                .toList();
         }
 
         private void appendTracking(Order order, OrderStatus status, String description) {
