@@ -174,6 +174,15 @@ CREATE TABLE IF NOT EXISTS restaurant_rate (
     CONSTRAINT fk_rate_customer FOREIGN KEY (restaurant_rate_customer_id) REFERENCES customer(customer_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS order_rate (
+    order_rate_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_rate_order_id UUID NOT NULL UNIQUE,
+    order_rate_rating INT NOT NULL CHECK (order_rate_rating BETWEEN 1 AND 5),
+    order_rate_comment VARCHAR(500),
+    order_rate_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_order_rate_order FOREIGN KEY (order_rate_order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS coupon (
     coupon_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     coupon_restaurant_id UUID NOT NULL,

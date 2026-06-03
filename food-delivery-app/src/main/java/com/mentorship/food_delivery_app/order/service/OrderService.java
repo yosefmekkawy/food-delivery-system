@@ -14,6 +14,8 @@ import com.mentorship.food_delivery_app.cart.entity.Cart;
 import com.mentorship.food_delivery_app.cart.entity.CartItem;
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.dto.OrderItemResponseDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderRateRequestDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderRateResponseDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderSummaryCustomerDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderSummaryDTO;
@@ -21,10 +23,12 @@ import com.mentorship.food_delivery_app.order.dto.OrderSummaryPaymentDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderTrackingResponseDTO;
 import com.mentorship.food_delivery_app.order.entity.Order;
 import com.mentorship.food_delivery_app.order.entity.OrderItem;
+import com.mentorship.food_delivery_app.order.entity.OrderRate;
 import com.mentorship.food_delivery_app.order.entity.OrderStatus;
 import com.mentorship.food_delivery_app.order.entity.OrderTracking;
 import com.mentorship.food_delivery_app.order.exceptions.InvalidOrderStateException;
 import com.mentorship.food_delivery_app.order.exceptions.OrderNotFoundException;
+import com.mentorship.food_delivery_app.order.repository.OrderRateRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderStatusRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderTrackingRepository;
@@ -57,6 +61,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderStatusRepository orderStatusRepository;
     private final OrderTrackingRepository orderTrackingRepository;
+        private final OrderRateRepository orderRateRepository;
         private final RestaurantBranchRepository restaurantBranchRepository;
         private final PaymentTransactionRepository paymentTransactionRepository;
 
@@ -316,6 +321,36 @@ public class OrderService {
                 return orderStatusRepository.findByName(name)
                                 .orElseThrow(() -> new IllegalStateException(
                                                 "Required order status not configured: " + name));
+        }
+
+        @Transactional
+        public OrderRateResponseDTO rateOrder(UUID orderId, OrderRateRequestDTO request) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+                if (!STATUS_DELIVERED.equals(order.getStatus().getName())) {
+                        throw new InvalidOrderStateException(
+                                        "Order can only be rated after delivery. Current status: "
+                                                        + order.getStatus().getName());
+                }
+
+                if (orderRateRepository.existsByOrder_Id(orderId)) {
+                        throw new InvalidOrderStateException("Order " + orderId + " has already been rated");
+                }
+
+                OrderRate rate = new OrderRate();
+                rate.setOrder(order);
+                rate.setRating(request.getRating());
+                rate.setComment(request.getComment());
+                rate.setCreatedAt(LocalDateTime.now());
+                OrderRate saved = orderRateRepository.save(rate);
+
+                return OrderRateResponseDTO.builder()
+                                .orderId(order.getId())
+                                .rating(saved.getRating())
+                                .comment(saved.getComment())
+                                .createdAt(saved.getCreatedAt())
+                                .build();
         }
 
         public List<OrderTrackingResponseDTO> getOrderTracking(UUID orderId) {
