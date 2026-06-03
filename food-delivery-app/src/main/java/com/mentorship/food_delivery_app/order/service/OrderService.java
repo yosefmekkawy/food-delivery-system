@@ -238,13 +238,7 @@ public class OrderService {
                 OrderStatus status = getStatusOrThrow(orderStatusId);
                 order.setStatus(status);
                 orderRepository.save(order);
-
-                OrderTracking orderTracking = orderTrackingRepository.findByOrder_Id(orderId)
-                        .orElseThrow(() -> new IllegalArgumentException("OrderTracking not found for order id: " + orderId));
-                orderTracking.setStatus(status);
-                orderTracking.setCreatedAt(LocalDateTime.now());
-                orderTrackingRepository.save(orderTracking);
-
+                appendTracking(order, status, "Status updated to: " + status.getName());
                 return "order with orderID: " + orderId + " has changed to status: " + status.getName();
         }
 

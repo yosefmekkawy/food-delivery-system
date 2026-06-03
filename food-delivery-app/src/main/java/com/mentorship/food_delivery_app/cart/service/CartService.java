@@ -26,14 +26,11 @@ import com.mentorship.food_delivery_app.cart.exceptions.MenuItemNotFoundExceptio
 import com.mentorship.food_delivery_app.cart.repository.CartItemRepository;
 import com.mentorship.food_delivery_app.cart.repository.CartRepository;
 import com.mentorship.food_delivery_app.cart.repository.MenuItemRepository;
+import com.mentorship.food_delivery_app.order.service.CheckoutService;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Service class for Cart operations.
- * This is where the business logic lives (math, mapping, etc.).
- */
 @Service
 @RequiredArgsConstructor
 public class CartService {
