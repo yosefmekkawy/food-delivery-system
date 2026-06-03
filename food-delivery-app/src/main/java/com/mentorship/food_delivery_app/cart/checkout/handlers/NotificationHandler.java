@@ -13,7 +13,7 @@ public class NotificationHandler extends AbstractCheckoutHandler {
     @Override
     public void handle(CheckoutContext context) {
         notificationService.notifyCustomerOrderPlaced(context.getOrder());
-        notificationService.notifyRestaurantNewOrder(context.getOrder(), context.getOrder().getRestaurantBranchId());
+        notificationService.notifyRestaurantNewOrder(context.getOrder(), context.getOrder().getRestaurantBranch().getId());
         proceed(context);
     }
 }

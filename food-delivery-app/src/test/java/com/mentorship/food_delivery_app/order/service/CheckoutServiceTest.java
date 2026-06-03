@@ -12,6 +12,7 @@ import com.mentorship.food_delivery_app.order.entity.OrderStatus;
 import com.mentorship.food_delivery_app.payment.dto.PaymentTransactionResponseDTO;
 import com.mentorship.food_delivery_app.payment.entity.PaymentTransaction;
 import com.mentorship.food_delivery_app.payment.service.PaymentService;
+import com.mentorship.food_delivery_app.restaurant.entity.RestaurantBranch;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -68,7 +69,9 @@ class CheckoutServiceTest {
         order.setTotal(new BigDecimal("25.00"));
         order.setStatus(new OrderStatus(1, "PLACED", null));
         order.setOrderedAt(LocalDateTime.now());
-        order.setRestaurantBranchId(branchId);
+        RestaurantBranch branch = new RestaurantBranch();
+        branch.setId(branchId);
+        order.setRestaurantBranch(branch);
 
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setId(UUID.randomUUID());
