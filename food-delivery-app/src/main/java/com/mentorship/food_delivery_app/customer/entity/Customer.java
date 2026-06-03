@@ -1,7 +1,10 @@
 package com.mentorship.food_delivery_app.customer.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import com.mentorship.food_delivery_app.payment.entity.PaymentTypeConfig;
 import com.mentorship.food_delivery_app.user.entity.User;
 
 import jakarta.persistence.Column;
@@ -11,6 +14,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -38,6 +43,10 @@ public class Customer {
     @Column(name = "customer_default_address_id")
     private UUID defaultAddressId;
 
-    @Column(name = "customer_preferred_payment_id")
-    private Integer preferredPaymentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_preferred_payment_id")
+    private PaymentTypeConfig preferredPayment;
+
+    @OneToMany(mappedBy = "customer")
+    private List<CustomerAddress> addresses = new ArrayList<>();
 }

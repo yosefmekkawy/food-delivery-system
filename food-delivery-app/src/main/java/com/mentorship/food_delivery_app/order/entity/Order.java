@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.mentorship.food_delivery_app.customer.entity.Customer;
+import com.mentorship.food_delivery_app.restaurant.entity.RestaurantBranch;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -63,8 +64,9 @@ public class Order {
     @JoinColumn(name = "order_status_id", nullable = false)
     private OrderStatus status;
 
-    @Column(name = "order_restaurant_branch_id", nullable = false)
-    private UUID restaurantBranchId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_restaurant_branch_id", nullable = false)
+    private RestaurantBranch restaurantBranch;
 
     @Column(name = "order_coupon_id")
     private UUID couponId;

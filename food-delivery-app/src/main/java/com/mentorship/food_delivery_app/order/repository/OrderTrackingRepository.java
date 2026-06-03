@@ -1,5 +1,6 @@
 package com.mentorship.food_delivery_app.order.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,4 +12,6 @@ import com.mentorship.food_delivery_app.order.entity.OrderTracking;
 @Repository
 public interface OrderTrackingRepository extends JpaRepository<OrderTracking, UUID> {
 	Optional<OrderTracking> findByOrder_Id(UUID orderId);
+
+	List<OrderTracking> findAllByOrder_IdOrderByCreatedAtAsc(UUID orderId);
 }

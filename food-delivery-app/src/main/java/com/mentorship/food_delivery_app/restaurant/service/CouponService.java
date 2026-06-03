@@ -1,18 +1,20 @@
 package com.mentorship.food_delivery_app.restaurant.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
 import com.mentorship.food_delivery_app.restaurant.entity.Coupon;
 import com.mentorship.food_delivery_app.restaurant.entity.CouponDiscountType;
 import com.mentorship.food_delivery_app.restaurant.exceptions.CouponNotFoundException;
 import com.mentorship.food_delivery_app.restaurant.exceptions.InvalidCouponException;
 import com.mentorship.food_delivery_app.restaurant.repository.CouponRepository;
 import com.mentorship.food_delivery_app.restaurant.repository.RestaurantBranchRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +47,7 @@ public class CouponService {
 
     private void validateRestaurant(Coupon coupon, UUID restaurantBranchId) {
         UUID restaurantId = restaurantBranchRepository.findById(restaurantBranchId)
-                .map(com.mentorship.food_delivery_app.restaurant.entity.RestaurantBranch::getRestaurantId)
+                .map(branch -> branch.getRestaurant().getId())
                 .orElse(null);
         if (!coupon.getRestaurantId().equals(restaurantId)) {
             throw InvalidCouponException.wrongRestaurant(coupon.getRestaurantId(), restaurantBranchId);

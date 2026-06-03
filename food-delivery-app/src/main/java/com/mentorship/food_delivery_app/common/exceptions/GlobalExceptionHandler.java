@@ -5,6 +5,7 @@ import com.mentorship.food_delivery_app.cart.exceptions.CartLockedException;
 import com.mentorship.food_delivery_app.cart.exceptions.CartNotFoundException;
 import com.mentorship.food_delivery_app.cart.exceptions.EmptyCartException;
 import com.mentorship.food_delivery_app.cart.exceptions.MenuItemNotFoundException;
+import com.mentorship.food_delivery_app.customer.exceptions.CustomerNotFoundException;
 import com.mentorship.food_delivery_app.order.exceptions.InvalidOrderStateException;
 import com.mentorship.food_delivery_app.order.exceptions.OrderNotFoundException;
 import com.mentorship.food_delivery_app.payment.exceptions.PaymentConfigurationNotFoundException;
@@ -28,7 +29,8 @@ public class GlobalExceptionHandler {
 			CartNotFoundException.class,
 			CartItemNotFoundException.class,
 			MenuItemNotFoundException.class,
-			OrderNotFoundException.class
+			OrderNotFoundException.class,
+			CustomerNotFoundException.class
 	})
 	public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException exception, HttpServletRequest request) {
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI(), null);

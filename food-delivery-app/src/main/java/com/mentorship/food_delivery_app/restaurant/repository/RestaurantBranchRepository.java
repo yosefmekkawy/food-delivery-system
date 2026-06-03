@@ -13,6 +13,6 @@ import com.mentorship.food_delivery_app.restaurant.entity.RestaurantBranch;
 @Repository
 public interface RestaurantBranchRepository extends JpaRepository<RestaurantBranch, UUID> {
 
-    @Query("select b.id from RestaurantBranch b where b.restaurantId = :restaurantId")
+    @Query("select b.id from RestaurantBranch b where b.restaurant.id = :restaurantId")
     List<UUID> findIdsByRestaurantId(@Param("restaurantId") UUID restaurantId);
 }

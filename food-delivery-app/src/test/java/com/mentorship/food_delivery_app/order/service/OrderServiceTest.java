@@ -15,6 +15,7 @@ import com.mentorship.food_delivery_app.order.repository.OrderStatusRepository;
 import com.mentorship.food_delivery_app.order.repository.OrderTrackingRepository;
 import com.mentorship.food_delivery_app.payment.repository.PaymentTransactionRepository;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
+import com.mentorship.food_delivery_app.restaurant.entity.RestaurantBranch;
 import com.mentorship.food_delivery_app.restaurant.repository.RestaurantBranchRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +61,7 @@ class OrderServiceTest {
 
         OrderStatus placed = status(1, "PLACED");
         when(orderStatusRepository.findById(1)).thenReturn(Optional.of(placed));
+        when(restaurantBranchRepository.findById(branchId)).thenReturn(Optional.of(branchWithId(branchId)));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Order order = orderService.createOrderFromCart(cart, "note", null, BigDecimal.ZERO);
@@ -68,7 +70,7 @@ class OrderServiceTest {
         assertThat(order.getTotal()).isEqualByComparingTo("25.00");
         assertThat(order.getItems()).hasSize(2);
         assertThat(order.getNote()).isEqualTo("note");
-        assertThat(order.getRestaurantBranchId()).isEqualTo(branchId);
+        assertThat(order.getRestaurantBranch().getId()).isEqualTo(branchId);
         assertThat(order.getAddressId()).isEqualTo(addressId);
         assertThat(order.getStatus()).isSameAs(placed);
     }
@@ -80,6 +82,7 @@ class OrderServiceTest {
         addCartItem(cart, new BigDecimal("50.00"), 1);
 
         when(orderStatusRepository.findById(1)).thenReturn(Optional.of(status(1, "PLACED")));
+        when(restaurantBranchRepository.findById(any())).thenAnswer(inv -> Optional.of(branchWithId(inv.getArgument(0))));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Order order = orderService.createOrderFromCart(cart, null, null, new BigDecimal("10.00"));
@@ -97,6 +100,7 @@ class OrderServiceTest {
         addCartItem(cart, new BigDecimal("5.00"), 1);
 
         when(orderStatusRepository.findById(1)).thenReturn(Optional.of(status(1, "PLACED")));
+        when(restaurantBranchRepository.findById(any())).thenAnswer(inv -> Optional.of(branchWithId(inv.getArgument(0))));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Order order = orderService.createOrderFromCart(cart, null, null, new BigDecimal("100.00"));
@@ -279,7 +283,9 @@ class OrderServiceTest {
         order.setTotal(new BigDecimal("20.00"));
         order.setDiscountValue(BigDecimal.ZERO);
         order.setAddressId(UUID.randomUUID());
-        order.setRestaurantBranchId(UUID.randomUUID());
+        RestaurantBranch branch = new RestaurantBranch();
+        branch.setId(UUID.randomUUID());
+        order.setRestaurantBranch(branch);
         order.setOrderedAt(LocalDateTime.now());
         order.setStatus(status(1, statusName));
         order.setItems(new ArrayList<>());
@@ -291,6 +297,12 @@ class OrderServiceTest {
         c.setId(UUID.randomUUID());
         c.setDefaultAddressId(addressId);
         return c;
+    }
+
+    private RestaurantBranch branchWithId(UUID id) {
+        RestaurantBranch branch = new RestaurantBranch();
+        branch.setId(id);
+        return branch;
     }
 
     private Cart cart(Customer customer, UUID branchId) {

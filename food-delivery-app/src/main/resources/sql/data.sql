@@ -333,3 +333,133 @@ SELECT 'COMPLETED', ord.order_id, 'CARD', ord.order_customer_id, ord.order_resta
 FROM ord
 WHERE NOT EXISTS (SELECT 1 FROM transactions t WHERE t.transaction_order_id = ord.order_id);
 
+-- 16. Deterministic customer seed for CustomerService/Postman testing
+-- Fixed IDs:
+-- user_id     = 11111111-1111-1111-1111-111111111111
+-- customer_id = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+-- address_id  = bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+-- order_id    = cccccccc-cccc-cccc-cccc-cccccccccccc
+INSERT INTO users (
+  user_id,
+  user_type_id,
+  user_first_name,
+  user_last_name,
+  user_birth_date,
+  user_phone,
+  user_email,
+  user_password
+)
+SELECT
+  '11111111-1111-1111-1111-111111111111'::uuid,
+  ut.user_type_id,
+  'Seed',
+  'Customer',
+  DATE '1999-09-09',
+  '01011111111',
+  'seed.customer@example.com',
+  'seed_password'
+FROM user_type ut
+WHERE ut.user_type_name = 'CUSTOMER'
+ON CONFLICT (user_id) DO NOTHING;
+
+INSERT INTO customer (
+  customer_id,
+  customer_user_id,
+  customer_default_address_id,
+  customer_preferred_payment_id
+)
+SELECT
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid,
+  '11111111-1111-1111-1111-111111111111'::uuid,
+  NULL,
+  NULL
+WHERE NOT EXISTS (
+  SELECT 1 FROM customer c
+  WHERE c.customer_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid
+);
+
+INSERT INTO customer_address (
+  customer_address_id,
+  customer_address_customer_id,
+  customer_address_label,
+  customer_address_city,
+  customer_address_street,
+  customer_address_building,
+  customer_address_apartment,
+  customer_address_phone_number,
+  customer_address_note
+)
+VALUES (
+  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid,
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid,
+  'Home',
+  'Cairo',
+  'Test Street 1',
+  'Building 10',
+  'Apt 5',
+  '01011111111',
+  'Seed address for API testing'
+)
+ON CONFLICT (customer_address_id) DO NOTHING;
+
+UPDATE customer c
+SET
+  customer_default_address_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid,
+  customer_preferred_payment_id = (
+    SELECT ptc.payment_type_config_id
+    FROM payment_type_config ptc
+    WHERE ptc.payment_integration_type = 'CARD'
+    ORDER BY ptc.payment_type_config_id
+    LIMIT 1
+  )
+WHERE c.customer_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid;
+
+INSERT INTO orders (
+  order_id,
+  order_address_id,
+  order_customer_id,
+  order_restaurant_branch_id,
+  order_discount_value,
+  order_subtotal,
+  order_fee,
+  order_total,
+  order_note,
+  order_status_id,
+  order_date
+)
+SELECT
+  'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid,
+  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid,
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid,
+  rb.branch_id,
+  0.00,
+  21.49,
+  0.00,
+  21.49,
+  'Seed order for CustomerService testing',
+  os.order_status_id,
+  CURRENT_TIMESTAMP - INTERVAL '1 day'
+FROM restaurant_branch rb
+JOIN order_status os ON os.order_status_name = 'PLACED'
+LIMIT 1
+ON CONFLICT (order_id) DO NOTHING;
+
+INSERT INTO order_item (
+  order_item_order_id,
+  order_item_menu_item_id,
+  order_item_unit_price,
+  order_item_quantity,
+  order_item_subtotal,
+  order_item_note
+)
+SELECT
+  'cccccccc-cccc-cccc-cccc-cccccccccccc'::uuid,
+  mi.menu_item_id,
+  mi.menu_item_price,
+  1,
+  mi.menu_item_price,
+  'Seed order item'
+FROM menu_item mi
+ORDER BY mi.menu_item_name
+LIMIT 1;
+

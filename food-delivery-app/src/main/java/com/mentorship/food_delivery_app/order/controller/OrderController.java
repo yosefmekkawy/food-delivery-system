@@ -3,6 +3,8 @@ package com.mentorship.food_delivery_app.order.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +15,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mentorship.food_delivery_app.order.dto.CancelOrderRequestDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderRateRequestDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderRateResponseDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import com.mentorship.food_delivery_app.order.dto.OrderSummaryDTO;
+import com.mentorship.food_delivery_app.order.dto.OrderTrackingResponseDTO;
 import com.mentorship.food_delivery_app.order.dto.ReturnOrderRequestDTO;
 import com.mentorship.food_delivery_app.order.service.OrderService;
 
@@ -36,6 +41,17 @@ public class OrderController {
     @GetMapping("/{orderId}/summary")
     public OrderSummaryDTO getOrderSummary(@PathVariable UUID orderId) {
         return orderService.getOrderSummary(orderId);
+    }
+
+    @GetMapping("/{orderId}/tracking")
+    public List<OrderTrackingResponseDTO> getOrderTracking(@PathVariable UUID orderId) {
+        return orderService.getOrderTracking(orderId);
+    }
+
+    @PostMapping("/{orderId}/rating")
+    public ResponseEntity<OrderRateResponseDTO> rateOrder(@PathVariable UUID orderId,
+                                                          @Valid @RequestBody OrderRateRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.rateOrder(orderId, request));
     }
 
     @GetMapping("/restaurant/{restaurantId}/active")
