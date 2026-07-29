@@ -1,11 +1,13 @@
 package com.mentorship.food_delivery_app.cart.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * DTO for mirroring the full cart to the user.
@@ -15,8 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartResponseDTO {
-    private Long cartId;
+    private UUID cartId;
     private List<CartItemResponseDTO> items;
     private BigDecimal totalAmount;
-    private String notes;
 }

@@ -1,16 +1,29 @@
 package com.mentorship.food_delivery_app.cart.entity;
 
-import com.mentorship.food_delivery_app.customer.entity.Customer;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import com.mentorship.food_delivery_app.customer.entity.Customer;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Table(name = "carts")
+@Table(name = "cart")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,19 +31,16 @@ import java.util.List;
 public class Cart {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cart_id")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "cart_id", nullable = false, updatable = false)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_customer_id", nullable = false)
     private Customer customer;
 
-    @Column(name = "current_rest_id")
-    private Long restaurantId;
-
-    @Column(name = "notes")
-    private String notes;
+    @Column(name = "cart_current_rest_id")
+    private UUID restaurantId;
 
     @Column(name = "is_locked")
     private Boolean isLocked = false;

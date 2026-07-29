@@ -24,10 +24,10 @@ public class PaymentTypeConfig {
     @Column(name = "payment_type_config_id")
     private Long id;
 
-    @Column(name = "payment_integration_type", nullable = false, length = 20)
+    @Column(name = "payment_integration_type", nullable = false, length = 50)
     private String paymentIntegrationType;
 
-    @Column(name = "config_details", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "config_details", nullable = false, columnDefinition = "jsonb")
     private String configDetails;
 }
 

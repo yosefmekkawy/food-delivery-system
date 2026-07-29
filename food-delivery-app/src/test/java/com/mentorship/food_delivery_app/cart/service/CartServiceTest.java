@@ -1,5 +1,23 @@
 package com.mentorship.food_delivery_app.cart.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.mentorship.food_delivery_app.cart.dto.CartResponseDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartRequestDTO;
 import com.mentorship.food_delivery_app.cart.dto.CheckoutCartResponseDTO;
@@ -11,24 +29,8 @@ import com.mentorship.food_delivery_app.cart.repository.MenuItemRepository;
 import com.mentorship.food_delivery_app.customer.entity.Customer;
 import com.mentorship.food_delivery_app.order.dto.OrderResponseDTO;
 import com.mentorship.food_delivery_app.payment.dto.PaymentTransactionResponseDTO;
+import com.mentorship.food_delivery_app.order.service.CheckoutService;
 import com.mentorship.food_delivery_app.restaurant.entity.MenuItem;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceTest {
@@ -50,9 +52,9 @@ class CartServiceTest {
 
     @Test
     void updateItemQuantity_shouldUpdateQuantityAndRecalculateTotal() {
-        Long customerId = 1L;
-        Long menuItemId = 10L;
-        Cart cart = createCart(100L, customerId, "Keep it warm");
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        UUID menuItemId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        Cart cart = createCart(UUID.fromString("22222222-2222-2222-2222-222222222222"), customerId);
         CartItem cartItem = addItem(cart, menuItemId, "Burger", new BigDecimal("12.50"), 2, "no onions");
 
         when(cartRepository.findByCustomerId(customerId)).thenReturn(Optional.of(cart));
@@ -68,11 +70,11 @@ class CartServiceTest {
 
     @Test
     void removeCartItem_shouldRemoveItemAndResetMetadataWhenCartBecomesEmpty() {
-        Long customerId = 1L;
-        Long menuItemId = 10L;
-        Cart cart = createCart(101L, customerId, "Leave at the gate");
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        UUID menuItemId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        Cart cart = createCart(UUID.fromString("33333333-3333-3333-3333-333333333333"), customerId);
         CartItem cartItem = addItem(cart, menuItemId, "Pizza", new BigDecimal("20.00"), 1, "extra cheese");
-        cart.setRestaurantId(8L);
+        cart.setRestaurantId(UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"));
 
         when(cartRepository.findByCustomerId(customerId)).thenReturn(Optional.of(cart));
         when(cartItemRepository.findByCartIdAndMenuItemId(cart.getId(), menuItemId)).thenReturn(Optional.of(cartItem));
@@ -83,29 +85,28 @@ class CartServiceTest {
         assertThat(response.getTotalAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(cart.getItems()).isEmpty();
         assertThat(cart.getRestaurantId()).isNull();
-        assertThat(cart.getNotes()).isNull();
     }
 
     @Test
     void checkoutCart_shouldDelegateToCheckoutService() {
-        Long customerId = 1L;
-        Cart cart = createCart(102L, customerId, "Original note");
-        addItem(cart, 11L, "Burger", new BigDecimal("10.00"), 2, "no pickles");
-        addItem(cart, 12L, "Fries", new BigDecimal("5.00"), 1, null);
-        cart.setRestaurantId(12L);
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        Cart cart = createCart(UUID.fromString("44444444-4444-4444-4444-444444444444"), customerId);
+        addItem(cart, UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc"), "Burger", new BigDecimal("10.00"), 2, "no pickles");
+        addItem(cart, UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd"), "Fries", new BigDecimal("5.00"), 1, null);
+        cart.setRestaurantId(UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"));
 
-        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("Checkout note", "CARD");
+        CheckoutCartRequestDTO request = new CheckoutCartRequestDTO("Checkout note", "CARD", null);
         CheckoutCartResponseDTO checkoutResponse = new CheckoutCartResponseDTO(
                 new OrderResponseDTO(
-                        500L,
-                        customerId,
-                        List.of(),
-                        new BigDecimal("25.00"),
-                        BigDecimal.ZERO,
-                        new BigDecimal("25.00"),
-                        "Checkout note",
-                        "PLACED",
-                        LocalDateTime.now()
+                    UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"),
+                    customerId,
+                    List.of(),
+                    new BigDecimal("25.00"),
+                    BigDecimal.ZERO,
+                    new BigDecimal("25.00"),
+                    "Checkout note",
+                    1,
+                    LocalDateTime.now()
                 ),
                 new PaymentTransactionResponseDTO(
                         java.util.UUID.randomUUID(),
@@ -122,20 +123,19 @@ class CartServiceTest {
 
         CheckoutCartResponseDTO result = cartService.checkoutCart(customerId, request);
 
-        assertThat(result.getOrder().getOrderId()).isEqualTo(500L);
+        assertThat(result.getOrder().getOrderId()).isEqualTo(UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff"));
         assertThat(result.getPayment().getStatus()).isEqualTo("COMPLETED");
         verify(checkoutService).checkout(cart, request);
         verify(menuItemRepository, never()).findById(any());
     }
 
-    private Cart createCart(Long cartId, Long customerId, String notes) {
+    private Cart createCart(UUID cartId, UUID customerId) {
         Customer customer = new Customer();
         customer.setId(customerId);
 
         Cart cart = new Cart();
         cart.setId(cartId);
         cart.setCustomer(customer);
-        cart.setNotes(notes);
         cart.setItems(new ArrayList<>());
         cart.setIsLocked(false);
         return cart;
@@ -143,7 +143,7 @@ class CartServiceTest {
 
     private CartItem addItem(
             Cart cart,
-            Long menuItemId,
+            UUID menuItemId,
             String itemName,
             BigDecimal price,
             Integer quantity,

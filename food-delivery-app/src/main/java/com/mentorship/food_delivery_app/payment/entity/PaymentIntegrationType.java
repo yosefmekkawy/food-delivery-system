@@ -18,7 +18,7 @@ import lombok.Setter;
 public class PaymentIntegrationType {
 
     @Id
-    @Column(name = "payment_integration_type_name", nullable = false, length = 20)
+    @Column(name = "payment_integration_type_name", nullable = false, length = 50)
     private String name;
 }
 

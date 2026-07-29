@@ -5,6 +5,8 @@ import com.mentorship.food_delivery_app.cart.exceptions.CartLockedException;
 import com.mentorship.food_delivery_app.cart.exceptions.CartNotFoundException;
 import com.mentorship.food_delivery_app.cart.exceptions.EmptyCartException;
 import com.mentorship.food_delivery_app.cart.exceptions.MenuItemNotFoundException;
+import com.mentorship.food_delivery_app.order.exceptions.InvalidOrderStateException;
+import com.mentorship.food_delivery_app.order.exceptions.OrderNotFoundException;
 import com.mentorship.food_delivery_app.payment.exceptions.PaymentConfigurationNotFoundException;
 import com.mentorship.food_delivery_app.payment.exceptions.RestaurantBranchRequiredException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +24,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler({CartNotFoundException.class, CartItemNotFoundException.class, MenuItemNotFoundException.class})
+	@ExceptionHandler({
+			CartNotFoundException.class,
+			CartItemNotFoundException.class,
+			MenuItemNotFoundException.class,
+			OrderNotFoundException.class
+	})
 	public ResponseEntity<ApiErrorResponse> handleNotFound(RuntimeException exception, HttpServletRequest request) {
 		return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI(), null);
 	}
@@ -31,7 +38,8 @@ public class GlobalExceptionHandler {
 			CartLockedException.class,
 			EmptyCartException.class,
 			PaymentConfigurationNotFoundException.class,
-			RestaurantBranchRequiredException.class
+			RestaurantBranchRequiredException.class,
+			InvalidOrderStateException.class
 	})
 	public ResponseEntity<ApiErrorResponse> handleBadRequest(RuntimeException exception, HttpServletRequest request) {
 		return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI(), null);
